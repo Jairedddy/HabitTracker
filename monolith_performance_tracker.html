@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Monolith - Performance Tracker</title>
+    
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed-dim": "#454747",
+                        "secondary": "#c7c6c6",
+                        "on-primary-fixed-variant": "#e2e2e2",
+                        "on-secondary-fixed-variant": "#3a3c3c",
+                        "tertiary-container": "#e5e5e5",
+                        "inverse-on-surface": "#313030",
+                        "surface-tint": "#c6c6c7",
+                        "outline": "#919191",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#ffffff",
+                        "on-surface-variant": "#c6c6c6",
+                        "primary-fixed-dim": "#454747",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "surface-bright": "#3a3939",
+                        "surface-container-low": "#1c1b1b",
+                        "surface": "#131313",
+                        "background": "#131313",
+                        "tertiary-fixed": "#e5e5e5",
+                        "on-primary-fixed": "#ffffff",
+                        "surface-container-highest": "#353534",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#000000",
+                        "on-tertiary": "#000000",
+                        "on-primary": "#1a1c1c",
+                        "on-secondary-container": "#e3e2e2",
+                        "surface-variant": "#353534",
+                        "outline-variant": "#474747",
+                        "on-surface": "#e5e2e1",
+                        "on-tertiary-container": "#000000",
+                        "inverse-surface": "#e5e2e1",
+                        "primary": "#ffffff",
+                        "surface-dim": "#131313",
+                        "secondary-fixed": "#c7c6c6",
+                        "on-background": "#e5e2e1",
+                        "inverse-primary": "#5d5f5f",
+                        "on-tertiary-fixed": "#ffffff",
+                        "secondary-container": "#464747",
+                        "surface-container-high": "#2a2a2a",
+                        "on-error": "#690005",
+                        "secondary-fixed-dim": "#ababab",
+                        "surface-container-lowest": "#0e0e0e",
+                        "tertiary": "#ffffff",
+                        "on-secondary": "#1a1c1c",
+                        "primary-container": "#d4d4d4",
+                        "surface-container": "#201f1f",
+                        "primary-fixed": "#5d5f5f",
+                        "on-error-container": "#ffdad6"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #131313;
+            color: #e5e2e1;
+            min-height: max(884px, 100dvh);
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/history@5/umd/history.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+        const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+        // Shared Components
+        const TopAppBar = () => (
+            <header className="fixed top-0 w-full z-50 bg-neutral-950/80 backdrop-blur-xl flex justify-between items-center px-6 h-16">
+                <div className="flex items-center gap-4">
+                    <span className="material-symbols-outlined text-white cursor-pointer transition-all active:scale-95 duration-200">menu</span>
+                    <h1 className="text-xl font-bold tracking-widest text-white font-['Space_Grotesk'] uppercase tracking-[0.05em]">MONOLITH</h1>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant/20">
+                    <img alt="Profile" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHfnu87NKpszzXFf2xh7ohb4D4NfwiXDFX7Ubuysih8aIWnA4z1CE6UW0loBMh_lYJ2OiEqxcwVWSyK-R4OwREjvlpUVA9F_yXZIw15hjYJFk1qckjG7UsS5HHXNhzEZOv6u5SOBMZEL2-s9XhucCKhNZLzQ8D1aCI5LR_NAZdqXUW5wDpnXov7PtRMXkT_Clv46fxYarU8-R73H51lS_qpL1HV3Ww1FkxgkYU8A8RgLqmsXiLsFZ6yM6iBx2Hvwg-Uoj3qv0DrvE" />
+                </div>
+            </header>
+        );
+
+        const BottomNavBar = () => {
+            const location = useLocation();
+            
+            const navItems = [
+                { path: '/', icon: 'home', label: 'HOME' },
+                { path: '/workout', icon: 'fitness_center', label: 'WORKOUT' },
+                { path: '/calories', icon: 'nutrition', label: 'CALORIES' },
+                { path: '/history', icon: 'calendar_today', label: 'HISTORY' },
+                { path: '/stats', icon: 'bar_chart', label: 'STATS' },
+            ];
+
+            return (
+                <nav className="fixed bottom-0 w-full z-50 bg-neutral-950/80 backdrop-blur-xl shadow-[0_-10px_40px_rgba(0,0,0,0.4)] flex justify-around items-center px-4 pb-6 pt-3">
+                    {navItems.map((item) => {
+                        const isActive = location.pathname === item.path;
+                        return (
+                            <Link 
+                                key={item.path} 
+                                to={item.path}
+                                className={`flex flex-col items-center justify-center px-3 py-1.5 transition-all active:scale-90 duration-200 ${isActive ? 'bg-neutral-800 text-white rounded-lg' : 'text-neutral-500 hover:text-neutral-200'}`}
+                            >
+                                <span className="material-symbols-outlined mb-1" style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>{item.icon}</span>
+                                <span className="font-['Inter'] text-[10px] font-bold tracking-[0.05em] uppercase">{item.label}</span>
+                            </Link>
+                        );
+                    })}
+                </nav>
+            );
+        };
+
+        // Screens
+        const Home = () => {
+            const [note, setNote] = useState("");
+
+            return (
+                <div className="pt-24 px-6 max-w-2xl mx-auto pb-32">
+                    <div className="mb-12">
+                        <h2 className="font-headline text-sm font-bold tracking-[0.2em] text-secondary uppercase">MONDAY, OCT 24</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-12">
+                        <div className="flex flex-col items-center justify-center">
+                            <div className="relative w-48 h-48 flex items-center justify-center">
+                                <svg className="absolute w-full h-full transform -rotate-90">
+                                    <circle className="text-surface-container-low" cx="96" cy="96" fill="transparent" r="88" stroke="currentColor" strokeWidth="6"></circle>
+                                    <circle className="text-white transition-all duration-1000" cx="96" cy="96" fill="transparent" r="88" stroke="currentColor" strokeDasharray="552.92" strokeDashoffset="138.23" strokeWidth="6"></circle>
+                                </svg>
+                                <div className="text-center">
+                                    <span className="font-headline text-6xl font-bold text-white block">75</span>
+                                    <span className="font-label text-[10px] tracking-[0.1em] text-secondary">DAILY SCORE</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-4">
+                            <div className="bg-surface-container-high p-6 rounded-lg">
+                                <span className="font-label text-[10px] tracking-[0.1em] text-secondary uppercase block mb-1">CURRENT STREAK</span>
+                                <span className="font-headline text-4xl font-bold text-white">12</span>
+                            </div>
+                            <div className="bg-surface-container-low p-6 rounded-lg">
+                                <span className="font-label text-[10px] tracking-[0.1em] text-secondary uppercase block mb-1">BEST RECORD</span>
+                                <span className="font-headline text-4xl font-bold text-secondary">45</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mb-12">
+                        <div className="bg-white/5 border-l-4 border-white p-4 flex items-center gap-4">
+                            <span className="material-symbols-outlined text-white">check_circle</span>
+                            <p className="font-body italic text-sm text-secondary">PRECISION MAINTAINED. YOU ARE IN THE TOP 5% FOR FOCUS TODAY.</p>
+                        </div>
+                    </div>
+
+                    <section className="mb-12">
+                        <h3 className="font-headline text-xs font-bold tracking-[0.1em] text-secondary uppercase mb-6">DAILY DISCIPLINES</h3>
+                        <div className="flex flex-col gap-4">
+                            {[
+                                { name: "Wake up 7AM", desc: "Biological clock synchronization", pts: "20PT", done: true },
+                                { name: "No nap", desc: "Maintaining daytime alertness", pts: "10PT", done: false },
+                                { name: "Workout done", desc: "Heavy lifting or high intensity", pts: "25PT", done: true },
+                                { name: "Diet followed", desc: "Macros within precision range", pts: "15PT", done: false },
+                                { name: "Phone cutoff 11:30PM", desc: "Zero blue light exposure", pts: "10PT", done: false },
+                                { name: "Side hustle 1hr", desc: "Uninterrupted deep work session", pts: "30PT", done: true },
+                                { name: "No late scrolling", desc: "Preserving mental dopamine levels", pts: "10PT", done: false },
+                            ].map((habit, i) => (
+                                <div key={i} className="flex items-center justify-between p-4 bg-surface-container-high rounded-lg group hover:bg-surface-container-highest transition-colors cursor-pointer">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-6 h-6 border-2 rounded flex items-center justify-center ${habit.done ? 'border-white bg-white/10' : 'border-outline'}`}>
+                                            {habit.done && <span className="material-symbols-outlined text-sm text-white" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>}
+                                        </div>
+                                        <div>
+                                            <span className="font-body text-white font-medium block">{habit.name}</span>
+                                            <span className="font-label text-xs text-secondary">{habit.desc}</span>
+                                        </div>
+                                    </div>
+                                    <span className="font-label text-[10px] tracking-[0.05em] text-secondary bg-surface-container-lowest px-2 py-1 rounded">{habit.pts}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="mb-12">
+                        <h3 className="font-headline text-xs font-bold tracking-[0.1em] text-secondary uppercase mb-6">INTEL REPORT / NOTES</h3>
+                        <div className="bg-surface-container-lowest rounded-lg overflow-hidden border border-outline-variant/10">
+                            <textarea 
+                                className="w-full bg-transparent border-none focus:ring-0 text-white font-body p-6 min-h-[160px] placeholder:text-neutral-600" 
+                                placeholder="LOG PERFORMANCE OBSERVATIONS..."
+                                value={note}
+                                onChange={(e) => setNote(e.target.value)}
+                            ></textarea>
+                            <div className="p-4 flex justify-end bg-surface-container-low/50">
+                                <button className="bg-white text-on-primary font-headline text-xs font-bold tracking-widest px-8 py-3 rounded-md hover:bg-neutral-200 transition-colors active:scale-95 duration-200 uppercase">SAVE NOTE</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            );
+        };
+
+        const Workout = () => {
+            return (
+                <div className="pt-24 px-6 max-w-2xl mx-auto pb-32">
+                    <section className="mb-10">
+                        <div className="flex flex-col gap-1">
+                            <span className="font-label text-[10px] font-bold tracking-[0.05em] uppercase text-secondary">TODAY'S MISSION</span>
+                            <h2 className="font-headline text-4xl md:text-5xl font-bold tracking-tight text-white leading-none">GYM + SWIM</h2>
+                        </div>
+                        <div className="mt-4 flex items-center gap-4">
+                            <div className="h-[2px] flex-1 bg-surface-container-lowest">
+                                <div className="h-full w-2/3 bg-white"></div>
+                            </div>
+                            <span className="font-label text-[10px] font-bold text-white">66% COMPLETE</span>
+                        </div>
+                    </section>
+
+                    <section className="mb-12">
+                        <div className="bg-surface-container-high rounded-xl p-6 shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-primary/20"></div>
+                            <div className="flex flex-col gap-6">
+                                <div className="flex flex-col gap-2">
+                                    <label className="font-label text-[10px] font-bold tracking-[0.05em] uppercase text-secondary">EXERCISE NAME</label>
+                                    <input className="bg-surface-container-lowest border-none text-white font-body p-4 rounded-lg focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-neutral-600" placeholder="e.g. Bench Press" type="text"/>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="flex flex-col gap-2">
+                                        <label className="font-label text-[10px] font-bold tracking-[0.05em] uppercase text-secondary">SETS</label>
+                                        <input className="bg-surface-container-lowest border-none text-center text-white font-headline text-xl p-4 rounded-lg focus:ring-1 focus:ring-primary/20" placeholder="0" type="number"/>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label className="font-label text-[10px] font-bold tracking-[0.05em] uppercase text-secondary">REPS</label>
+                                        <input className="bg-surface-container-lowest border-none text-center text-white font-headline text-xl p-4 rounded-lg focus:ring-1 focus:ring-primary/20" placeholder="0" type="number"/>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label className="font-label text-[10px] font-bold tracking-[0.05em] uppercase text-secondary">WEIGHT (KG)</label>
+                                        <input className="bg-surface-container-lowest border-none text-center text-white font-headline text-xl p-4 rounded-lg focus:ring-1 focus:ring-primary/20" placeholder="0" type="number"/>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 pt-2">
+                                    <button className="flex-1 font-label font-bold text-[11px] uppercase tracking-widest text-secondary hover:text-white transition-colors duration-200">
+                                        CANCEL
+                                    </button>
+                                    <button className="flex-1 bg-primary text-on-primary font-label font-bold text-[11px] uppercase tracking-widest py-4 rounded-md active:scale-95 duration-200">
+                                        SAVE RECORD
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="space-y-6">
+                        <h3 className="font-label text-[10px] font-bold tracking-[0.1em] uppercase text-secondary mb-4 flex items-center gap-2">
+                            LOGGED ACTIVITIES <span className="w-1 h-1 rounded-full bg-secondary"></span> 03
+                        </h3>
+                        
+                        {[
+                            { name: "Barbell Back Squat", pr: true, sets: "04", reps: "08", weight: "140", hist: "135kg • 04 x 08" },
+                            { name: "Incline Dumbbell Press", pr: false, sets: "03", reps: "12", weight: "32", hist: "32kg • 03 x 10" },
+                            { name: "Pull-Ups (Weighted)", pr: false, sets: "03", reps: "06", weight: "15", hist: "10kg • 03 x 08" },
+                        ].map((ex, i) => (
+                            <div key={i} className="bg-surface-container-low rounded-xl p-6 group transition-all">
+                                <div className="flex justify-between items-start mb-6">
+                                    <h4 className="font-headline text-xl font-medium text-white">{ex.name}</h4>
+                                    {ex.pr ? (
+                                        <span className="bg-white text-on-primary px-2 py-1 rounded text-[10px] font-bold font-label flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>arrow_upward</span> PR
+                                        </span>
+                                    ) : (
+                                        <span className="material-symbols-outlined text-secondary cursor-pointer hover:text-white">more_vert</span>
+                                    )}
+                                </div>
+                                <div className="grid grid-cols-3 gap-1 mb-4">
+                                    <div className="bg-surface-container-lowest p-4 rounded-l-lg text-center">
+                                        <span className="block font-label text-[9px] text-secondary uppercase mb-1">Sets</span>
+                                        <span className="font-headline text-xl text-white">{ex.sets}</span>
+                                    </div>
+                                    <div className="bg-surface-container-lowest p-4 text-center">
+                                        <span className="block font-label text-[9px] text-secondary uppercase mb-1">Reps</span>
+                                        <span className="font-headline text-xl text-white">{ex.reps}</span>
+                                    </div>
+                                    <div className="bg-surface-container-lowest p-4 rounded-r-lg text-center">
+                                        <span className="block font-label text-[9px] text-secondary uppercase mb-1">KG</span>
+                                        <span className="font-headline text-xl text-white">{ex.weight}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 text-[11px] font-body text-secondary italic">
+                                    <span className="material-symbols-outlined text-sm">history</span>
+                                    Last week: {ex.hist}
+                                </div>
+                            </div>
+                        ))}
+                    </section>
+                </div>
+            );
+        };
+
+        const Calories = () => {
+            return (
+                <div className="pt-24 px-6 max-w-2xl mx-auto pb-32 space-y-12">
+                    <section className="space-y-6 text-center md:text-left">
+                        <div className="space-y-1">
+                            <span className="font-['Inter'] text-[10px] font-bold tracking-[0.05em] uppercase text-secondary">TODAY'S CONSUMPTION</span>
+                            <h1 className="font-['Space_Grotesk'] text-7xl md:text-8xl font-bold tracking-tighter text-primary">1,840</h1>
+                            <div className="flex items-center justify-center md:justify-start gap-3">
+                                <span className="font-['Inter'] text-sm text-secondary">Goal: 2,500 kcal</span>
+                                <span className="w-1 h-1 bg-neutral-700 rounded-full"></span>
+                                <span className="font-['Inter'] text-sm font-bold text-white">REMAINING: 660</span>
+                            </div>
+                        </div>
+                        <div className="w-full h-3 bg-surface-container-lowest rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-white to-neutral-400 w-[73.6%] rounded-full shadow-[0_0_15px_rgba(255,255,255,0.1)]"></div>
+                        </div>
+                    </section>
+
+                    <section className="space-y-4">
+                        <h2 className="font-['Inter'] text-[10px] font-bold tracking-[0.05em] uppercase text-secondary">WEEKLY PERFORMANCE</h2>
+                        <div className="grid grid-cols-7 gap-2">
+                            {[
+                                { day: 'M', h: '95%', color: 'bg-primary' },
+                                { day: 'T', h: '80%', color: 'bg-primary' },
+                                { day: 'W', h: '100%', color: 'bg-error' },
+                                { day: 'T', h: '90%', color: 'bg-primary' },
+                                { day: 'F', h: '75%', color: 'bg-primary' },
+                                { day: 'S', h: '85%', color: 'bg-primary' },
+                                { day: 'S', h: '73%', color: 'bg-primary', active: true },
+                            ].map((d, i) => (
+                                <div key={i} className="flex flex-col items-center gap-2">
+                                    <div className={`w-full aspect-[2/5] bg-surface-container-lowest rounded-sm flex flex-col justify-end ${d.active ? 'ring-1 ring-white/50' : ''}`}>
+                                        <div className={`w-full ${d.color} rounded-sm ${d.active ? 'shadow-[0_0_10px_rgba(255,255,255,0.2)]' : ''}`} style={{ height: d.h }}></div>
+                                    </div>
+                                    <span className={`font-['Inter'] text-[9px] ${d.active ? 'text-primary font-bold' : 'text-secondary font-medium'}`}>{d.day}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="bg-surface-container-high p-8 rounded-xl space-y-6">
+                        <div className="space-y-1">
+                            <h3 className="font-['Space_Grotesk'] text-xl font-bold tracking-tight text-primary">LOG MEAL</h3>
+                            <p className="font-['Inter'] text-sm italic text-secondary">Discipline starts with precise documentation.</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="font-['Inter'] text-[10px] font-bold tracking-[0.05em] uppercase text-secondary flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-primary rounded-full"></span> MEAL NAME
+                                </label>
+                                <input className="w-full bg-surface-container-lowest border-none text-white font-['Inter'] py-3 px-4 rounded-md focus:bg-surface-container focus:ring-0 transition-colors placeholder:text-neutral-700" placeholder="e.g., Grilled Chicken & Rice" type="text"/>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="font-['Inter'] text-[10px] font-bold tracking-[0.05em] uppercase text-secondary flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-primary rounded-full"></span> CALORIES
+                                </label>
+                                <input className="w-full bg-surface-container-lowest border-none text-white font-['Inter'] py-3 px-4 rounded-md focus:bg-surface-container focus:ring-0 transition-colors placeholder:text-neutral-700" placeholder="0" type="number"/>
+                            </div>
+                        </div>
+                        <button className="w-full bg-primary text-on-primary font-['Inter'] font-bold text-xs tracking-[0.1em] py-4 rounded-md hover:opacity-90 active:scale-[0.98] transition-all">
+                            ADD MEAL
+                        </button>
+                    </section>
+
+                    <section className="space-y-4">
+                        <div className="flex justify-between items-end">
+                            <h2 className="font-['Inter'] text-[10px] font-bold tracking-[0.05em] uppercase text-secondary">TODAY'S LOG</h2>
+                            <span className="font-['Inter'] text-[10px] text-neutral-600 uppercase">3 ENTRIES</span>
+                        </div>
+                        <div className="space-y-4">
+                            {[
+                                { name: "Protein Shake & Almonds", time: "08:15 AM", cal: "420" },
+                                { name: "Salmon Teriyaki Bowl", time: "01:30 PM", cal: "850" },
+                                { name: "Greek Yogurt & Berries", time: "04:45 PM", cal: "570" },
+                            ].map((meal, i) => (
+                                <div key={i} className="bg-surface-container-low p-5 rounded-lg flex justify-between items-center group hover:bg-surface-container transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded bg-surface-container-lowest flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-secondary text-sm">restaurant</span>
+                                        </div>
+                                        <div>
+                                            <p className="font-['Inter'] font-semibold text-primary">{meal.name}</p>
+                                            <p className="font-['Inter'] text-[10px] text-neutral-500 uppercase tracking-wider">{meal.time}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="font-['Space_Grotesk'] text-xl font-bold text-primary">{meal.cal}</span>
+                                        <span className="font-['Inter'] text-[10px] text-secondary ml-1">KCAL</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                </div>
+            );
+        };
+
+        const History = () => {
+            const [expandedDay, setExpandedDay] = useState("OCT 24");
+
+            const days = [
+                { date: "OCT 25", score: "75", icons: ['fitness_center', 'water_drop', 'menu_book', 'bedtime_off'] },
+                { 
+                    date: "OCT 24", score: "100", 
+                    icons: ['fitness_center', 'water_drop', 'menu_book', 'bedtime', 'code'],
+                    expanded: true
+                },
+                { date: "OCT 23", score: "92", icons: ['fitness_center', 'water_drop_off', 'menu_book', 'bedtime'] },
+                { date: "OCT 22", score: "00", icons: ['fitness_center_off', 'water_drop_off', 'menu_book_off', 'bedtime_off'], error: true },
+                { date: "OCT 21", score: "100", icons: ['fitness_center', 'water_drop', 'menu_book', 'bedtime'] },
+            ];
+
+            return (
+                <div className="pt-24 px-6 max-w-2xl mx-auto pb-32">
+                    <section className="mb-12">
+                        <p className="font-['Inter'] text-[10px] font-bold tracking-[0.1em] uppercase text-secondary mb-2">PERFORMANCE LOG</p>
+                        <div className="flex justify-between items-end">
+                            <h2 className="font-['Space_Grotesk'] text-4xl font-bold tracking-tight text-white">HISTORY</h2>
+                            <div className="text-right">
+                                <p className="font-['Inter'] text-[10px] font-bold tracking-[0.1em] uppercase text-white/60">30 DAY AVG</p>
+                                <p className="font-['Space_Grotesk'] text-2xl font-bold text-white">88<span className="text-secondary text-sm ml-1">%</span></p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div className="space-y-4">
+                        {days.map((day) => (
+                            day.date === expandedDay ? (
+                                <div key={day.date} className="bg-surface-container-high border border-outline-variant/10 p-5 rounded-lg space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-6">
+                                            <span className="font-['Space_Grotesk'] text-lg font-bold text-white w-14">{day.date}</span>
+                                            <div className="flex gap-2">
+                                                {day.icons.map((icon, i) => (
+                                                    <span key={i} className="material-symbols-outlined text-white text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>{icon.replace('_off', '')}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="bg-white text-black px-3 py-1 rounded text-sm font-bold font-['Space_Grotesk']">
+                                            {day.score}
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-outline-variant/20">
+                                        <div className="space-y-3">
+                                            <p className="font-['Inter'] text-[10px] font-bold tracking-[0.1em] uppercase text-secondary">HABIT BREAKDOWN</p>
+                                            <ul className="space-y-3">
+                                                {['Weight Training', '3L Hydration', 'Deep Work (4h)', 'No Screen > 10PM'].map((habit, i) => (
+                                                    <li key={i} className="flex items-center justify-between group">
+                                                        <span className="text-sm font-medium text-on-surface">{habit}</span>
+                                                        <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <p className="font-['Inter'] text-[10px] font-bold tracking-[0.1em] uppercase text-secondary">DAILY NOTE</p>
+                                            <p className="text-sm italic text-secondary leading-relaxed">
+                                                "High energy today. Hit a new PR on deadlifts. Mental clarity is peak after the morning cold plunge. Zero friction in the workflow."
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div key={day.date} onClick={() => setExpandedDay(day.date)} className="bg-surface-container-low p-4 rounded-lg flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors">
+                                    <div className="flex items-center gap-6">
+                                        <span className="font-['Space_Grotesk'] text-lg font-medium text-white w-14">{day.date}</span>
+                                        <div className="flex gap-2">
+                                            {day.icons.map((icon, i) => {
+                                                const isActive = !icon.includes('_off');
+                                                const iconName = icon.replace('_off', '');
+                                                return (
+                                                    <span key={i} className={`material-symbols-outlined text-lg ${isActive ? 'text-white' : 'text-neutral-600'}`} style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>
+                                                        {iconName}
+                                                    </span>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                    <div className={day.error ? "bg-error-container/20 text-error px-3 py-1 rounded text-sm font-bold font-['Space_Grotesk']" : "bg-surface-container-highest px-3 py-1 rounded text-sm font-bold font-['Space_Grotesk'] text-white"}>
+                                        {day.score}
+                                    </div>
+                                </div>
+                            )
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const Stats = () => {
+            return (
+                <div className="pt-24 px-6 max-w-2xl mx-auto pb-32 space-y-12">
+                    <section>
+                        <h2 className="font-headline text-5xl font-bold tracking-tighter text-white">PERFORMANCE</h2>
+                        <p className="font-body italic text-secondary text-sm mt-2">Analyzing the architecture of your discipline.</p>
+                    </section>
+
+                    <section className="grid grid-cols-3 gap-3">
+                        <div className="bg-surface-container-high p-4 flex flex-col justify-between h-32 rounded-lg">
+                            <span className="text-[10px] font-bold tracking-[0.1em] text-secondary uppercase font-label">AVG SCORE</span>
+                            <span className="font-headline text-4xl font-bold text-white">88</span>
+                        </div>
+                        <div className="bg-surface-container-high p-4 flex flex-col justify-between h-32 rounded-lg">
+                            <span className="text-[10px] font-bold tracking-[0.1em] text-secondary uppercase font-label">BEST DAY</span>
+                            <span className="font-headline text-4xl font-bold text-white">100</span>
+                        </div>
+                        <div className="bg-surface-container-high p-4 flex flex-col justify-between h-32 rounded-lg">
+                            <span className="text-[10px] font-bold tracking-[0.1em] text-secondary uppercase font-label">WORST DAY</span>
+                            <span className="font-headline text-4xl font-bold text-error">42</span>
+                        </div>
+                    </section>
+
+                    <section className="space-y-6">
+                        <div className="flex justify-between items-end">
+                            <h3 className="text-[10px] font-bold tracking-[0.1em] text-secondary uppercase font-label">LAST 7 DAYS</h3>
+                            <span className="text-[10px] font-medium text-outline uppercase font-label">Mar 01 — Mar 07</span>
+                        </div>
+                        <div className="space-y-4">
+                            {[
+                                { day: 'MON', w: '92%', c: 'bg-white', val: '92' },
+                                { day: 'TUE', w: '88%', c: 'bg-white', val: '88' },
+                                { day: 'WED', w: '65%', c: 'bg-orange-400', val: '65' },
+                                { day: 'THU', w: '100%', c: 'bg-white', val: '100' },
+                                { day: 'FRI', w: '42%', c: 'bg-error', val: '42' },
+                                { day: 'SAT', w: '85%', c: 'bg-white', val: '85' },
+                                { day: 'SUN', w: '95%', c: 'bg-white', val: '95' },
+                            ].map((d, i) => (
+                                <div key={i} className="group flex items-center gap-4">
+                                    <span className="w-8 text-[10px] font-bold text-outline font-label">{d.day}</span>
+                                    <div className="flex-1 h-3 bg-surface-container-lowest rounded-full overflow-hidden">
+                                        <div className={`h-full ${d.c}`} style={{ width: d.w }}></div>
+                                    </div>
+                                    <span className="w-8 text-right font-headline text-xs text-white">{d.val}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="space-y-6">
+                        <h3 className="text-[10px] font-bold tracking-[0.1em] text-secondary uppercase font-label">HABIT EFFICIENCY</h3>
+                        <div className="space-y-8">
+                            {[
+                                { name: 'Deep Work (4hrs)', w: '85%' },
+                                { name: 'Resistance Training', w: '92%' },
+                                { name: 'Cold Exposure', w: '64%' },
+                            ].map((h, i) => (
+                                <div key={i} className="space-y-2">
+                                    <div className="flex justify-between items-end">
+                                        <span className="text-sm font-medium text-white">{h.name}</span>
+                                        <span className="font-headline text-lg font-bold text-white">{h.w}</span>
+                                    </div>
+                                    <div className="h-[2px] w-full bg-surface-container-low">
+                                        <div className="h-full bg-white" style={{ width: h.w }}></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                </div>
+            );
+        };
+
+        const App = () => {
+            return (
+                <MemoryRouter>
+                    <div className="min-h-screen bg-background">
+                        <TopAppBar />
+                        <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/workout" element={<Workout />} />
+                            <Route path="/calories" element={<Calories />} />
+                            <Route path="/history" element={<History />} />
+                            <Route path="/stats" element={<Stats />} />
+                        </Routes>
+                        <BottomNavBar />
+                    </div>
+                </MemoryRouter>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
